@@ -1,9 +1,8 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///library.db'
-db = SQLAlchemy(app)
+
+db = SQLAlchemy()
 
 # Define models
 
@@ -48,7 +47,3 @@ class Ebook(db.Model):
 
 # Define any additional models or relationships as needed
 
-if __name__ == '__main__':
-    # This block will create the database file using the models defined above
-    db.create_all()
-    app.run(debug=True)
