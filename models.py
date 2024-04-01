@@ -5,6 +5,7 @@ db=SQLAlchemy()
 # Define models
 
 class Section(db.Model):
+    __tablename__='section'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     date_created = db.Column(db.DateTime, nullable=False)
@@ -14,9 +15,22 @@ class Section(db.Model):
         return f"Section('{self.name}', '{self.date_created}')"
 
 class User(db.Model):
+    __tablename__='user'
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), unique=True, nullable=False)
+    password_hash=db.Column(db.String(100),nullable=False)
     # Add more user attributes as needed
+
+    @property
+    def password(self):
+        raise AttributeError('password is not a readable attribute')
+    
+    @password.setter
+    def password(self,password):
+        self.password_hash=generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash,password)
 
     def __repr__(self):
         return f"User('{self.username}')"
