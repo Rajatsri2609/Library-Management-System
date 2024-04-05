@@ -357,45 +357,45 @@
 </style>         
 
 {% endblock %}
-
+{% include 'navbar.html' %}
 {% block content %}
 <div class="limiter">
     <div class="container-login">
         <div class="wrap-login">
-            <form class="login-form validate-form">
+            <form class="login-form validate-form" method="post" action="{{ url_for('register') }}">
                 <span class="login-form-title">
                     Welcome
                 </span>
-            
-                <div class="wrap-input validate-input" data-validate="Valid email is: a@email.c">
-                    <input class="input" type="text" name="email">
-                    <span class="focus-input" data-placeholder="Email"></span>
+                
+                <div class="wrap-input validate-input">
+                    <input class="input" type="text" name="username" placeholder="Username">
+                    <span class="focus-input" data-placeholder="Username"></span>
                 </div>
-
+            
                 <div class="wrap-input validate-input" data-validate="Enter password">
                     <span class="btn-show-pass">
                         <i class="zmdi zmdi-eye"></i>
                     </span>
-                    <input class="input" type="password" name="pass">
+                    <input class="input" type="password" name="password" placeholder="Password">
                     <span class="focus-input" data-placeholder="Password"></span>
                 </div>
-
-                <div class="wrap-input validate-input" data-validate="Confirm password">
+            
+                <div class="wrap-input validate-input">
                     <span class="btn-show-pass">
                         <i class="zmdi zmdi-eye"></i>
                     </span>
-                    <input class="input" type="password" name="confirm_pass">
-                    <span class="focus-input" data-placeholder="Confirm Password"></span>
+                    <input class="input" type="text" name="name" placeholder="Name">
+                    <span class="focus-input" data-placeholder="Name"></span>
                 </div>
-
+            
                 <div class="container-login-form-btn">
                     <div class="wrap-login-form-btn">
-                        <button class="login-form-btn">
+                        <button type="submit" class="login-form-btn">
                             Sign up
                         </button>
                     </div>
                 </div>
-            </form>
+            </form>            
         </div>
     </div>
 </div>
