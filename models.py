@@ -19,6 +19,8 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), unique=True, nullable=False)
     password_hash=db.Column(db.String(100),nullable=False)
+    name=db.Column(db.String(100),nullable=False)
+    is_Librarian=db.Column(db.Boolean,nullable=False,default=False)
     # Add more user attributes as needed
 
     @property
@@ -38,8 +40,21 @@ class User(db.Model):
 class Librarian(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), unique=True, nullable=False)
-
+    password_hash=db.Column(db.String(100),nullable=False)
+    name=db.Column(db.String(100),nullable=False)
+    is_Librarian=db.Column(db.Boolean,nullable=False,default=False)
     # Add more librarian attributes as needed
+
+    @property
+    def password(self):
+        raise AttributeError('password is not a readable attribute')
+    
+    @password.setter
+    def password(self,password):
+        self.password_hash=generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash,password)
 
     def __repr__(self):
         return f"Librarian('{self.username}')"
@@ -82,6 +97,21 @@ class BookRequest(db.Model):
 
     def __repr__(self):
         return f"BookRequest('{self.book_id}', '{self.user_id}', '{self.request_date}', '{self.return_date}')"
+    
+class Feedback(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    ebook_id = db.Column(db.Integer, db.ForeignKey('ebook.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    rating = db.Column(db.Integer, nullable=False)
+    comment = db.Column(db.Text)
+    feedback_date = db.Column(db.DateTime, nullable=False)
+
+    user = db.relationship('User', backref=db.backref('feedbacks', lazy=True))
+    ebook = db.relationship('Ebook', backref=db.backref('feedbacks', lazy=True))
+
+    def __repr__(self):
+        return f"Feedback('{self.rating}', '{self.comment}', '{self.feedback_date}')"
+
 
 
 # Define any additional models or relationships as needed
