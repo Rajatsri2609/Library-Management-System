@@ -38,6 +38,7 @@ class User(db.Model):
 class Librarian(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), unique=True, nullable=False)
+
     # Add more librarian attributes as needed
 
     def __repr__(self):
@@ -56,6 +57,32 @@ class Ebook(db.Model):
 
     def __repr__(self):
         return f"Ebook('{self.name}', '{self.author}', '{self.date_issued}', '{self.return_date}')"
+    
+class Access(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    section_id = db.Column(db.Integer, db.ForeignKey('section.id'), nullable=False)
+    granted_access_date = db.Column(db.DateTime, nullable=False)
+    revoked_access_date = db.Column(db.DateTime)
+
+    librarian_id = db.Column(db.Integer, db.ForeignKey('librarian.id'), nullable=False)
+    librarian = db.relationship('Librarian', backref=db.backref('access_granted', lazy=True))
+
+    def __repr__(self):
+        return f"Access('{self.user_id}', '{self.section_id}', '{self.granted_access_date}', '{self.revoked_access_date}', '{self.librarian_id}')"
+
+class BookRequest(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    book_id = db.Column(db.Integer, db.ForeignKey('ebook.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    request_date = db.Column(db.DateTime, nullable=False)
+    return_date = db.Column(db.DateTime, nullable=False)
+
+    user = db.relationship('User', backref=db.backref('book_requests', lazy=True))
+
+    def __repr__(self):
+        return f"BookRequest('{self.book_id}', '{self.user_id}', '{self.request_date}', '{self.return_date}')"
+
 
 # Define any additional models or relationships as needed
 
