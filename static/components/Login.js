@@ -55,26 +55,36 @@ export default {
       },
       methods: {
         async login() {
-           const res = await fetch('/user-login', {
-             method: 'POST',
-             headers: {
-               'Content-Type': 'application/json',
-             },
-             body: JSON.stringify(this.cred),
-           })
-          
-         if (res.ok) {
-             const data = await res.json()
-             console.log("xyz",data)
-            localStorage.setItem('auth-token', data.token)
-         //     // localStorage.setItem('role', data.role)
-         //     this.$router.push({ path: '/' })
-         //   } else {
-         //     this.error = data.message
-         this.$router.push({ path: '/' });
-         }
+          try {
+            const res = await fetch('/user-login', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(this.cred),
+            });
+            
+            if (res.ok) {
+              const data = await res.json();
+              console.log("Login data:", data);
+              localStorage.setItem('auth-token', data.token);
+              
+              // Pass the username as a query parameter in the redirect
+              this.$router.push({ path: '/', query: {username: data.username, is_Librarian: data.is_Librarian.toString()} });
+;
+
+            } else {
+              // Handle login errors
+              const errorData = await res.json();
+              this.error = errorData.message;
+            }
+          } catch (error) {
+            console.error('Login failed:', error);
+            this.error = 'Login failed';
+          }
         },
     },
+      
 
 }
 

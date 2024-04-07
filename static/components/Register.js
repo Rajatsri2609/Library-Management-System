@@ -69,7 +69,7 @@ export default {
             const data = await res.json();
             localStorage.setItem('auth-token', data.token);
             // Redirect the user to the home page or any other desired page
-            this.$router.push({ path: '/' });
+            this.$router.push({ path: '/login' });
           } else {
             const errorData = await res.json();
             this.error = errorData.message;
