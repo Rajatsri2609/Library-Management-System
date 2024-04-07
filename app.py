@@ -6,13 +6,6 @@ from jwt import encode
 from flask_cors import CORS 
 from flask_restful import *
 from flask import current_app as app, jsonify, request, render_template
-# from flask_security import auth_required, roles_required
-# from werkzeug.security import check_password_hash
-# from flask_restful import marshal, fields
-# import flask_excel as excel
-# from celery.result import AsyncResult
-# from .tasks import create_resource_csv
-# from .sec import datastore
 
 
 app = Flask(__name__)
@@ -96,32 +89,6 @@ def register():
 
     return jsonify({"message": "User registered successfully", "token": token}), 201
 
-
-# @app.post('/user-login')
-# def userogin():
-#     data = request.get_json()
-#     username = data.get('username')
-#     password = data.get('password')
-
-#     if not username or not password:
-#         return jsonify({"message": "Username or password not provided"}), 400
-
-#     # Check if the user is a regular user
-#     user = User.query.filter_by(username=username).first()
-#     if user and check_password_hash(user.password_hash, password):
-#         # Log in as regular user
-#         token = jwt.encode({'username': user.username}, app.config['SECRET_KEY'], algorithm='HS256')
-#         return jsonify({"message": "Login successful", "token": token}), 200
-
-#     # Check if the user is a librarian
-#     librarian = Librarian.query.filter_by(username=username).first()
-#     if librarian and check_password_hash(librarian.password_hash, password):
-#         # Log in as librarian
-#         token = jwt.encode({'username': librarian.username, 'is_librarian': True}, app.config['SECRET_KEY'], algorithm='HS256')
-#         return jsonify({"message": "Login successful as librarian", "token": token}), 200
-
-#     return jsonify({"message": "Invalid username or password"}), 401
-   
 
 
 if __name__ == "__main__":

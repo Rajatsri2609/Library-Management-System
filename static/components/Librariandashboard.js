@@ -1,3 +1,6 @@
 export default {
-    template: `<div> Welcome Librarian</div>`,
+    template: `
+    <div style="text-align:center"> 
+    <h1>Welcome Librarian</h1>
+    </div>`,
   }

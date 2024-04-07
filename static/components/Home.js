@@ -4,7 +4,6 @@ import Userdashboard from "./Userdashboard.js";
 export default {
   template: `
     <div>
-      <div>Welcome {{$route.query.username}}</div>
       <Librariandashboard v-if="is_Librarian" />
       <Userdashboard v-else />
     </div>

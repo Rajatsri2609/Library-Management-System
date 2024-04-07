@@ -71,7 +71,6 @@ export default {
               
               // Pass the username as a query parameter in the redirect
               this.$router.push({ path: '/', query: {username: data.username, is_Librarian: data.is_Librarian.toString()} });
-;
 
             } else {
               // Handle login errors
