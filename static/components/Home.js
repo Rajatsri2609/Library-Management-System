@@ -10,11 +10,18 @@ export default {
   `,
   data() {
     return {
-      is_Librarian: this.$route.query.is_Librarian === 'true', // Convert string to boolean
+      is_Librarian: false,
     };
+  },
+  created() {
+    // Check if the user is a librarian
+    const isLibrarian = this.$route.query.is_Librarian;
+    this.is_Librarian = isLibrarian == 'true';
+    localStorage.setItem('is_Librarian', isLibrarian); // Store the is_Librarian flag in local storage
+    console.log(isLibrarian);
   },
   components: {
     Librariandashboard,
-    Userdashboard,
+    Userdashboard, // Make sure Userdashboard is properly registered as a component
   },
 };

@@ -1,5 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 # from flask_security import UserMixin
+from datetime import datetime
 from werkzeug.security import generate_password_hash,check_password_hash
 
 
@@ -11,7 +12,7 @@ class Section(db.Model):
     __tablename__='section'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
-    date_created = db.Column(db.DateTime, nullable=False)
+    date_created = db.Column(db.String)
     description = db.Column(db.Text)
 
     def __repr__(self):
