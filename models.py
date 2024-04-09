@@ -15,6 +15,8 @@ class Section(db.Model):
     date_created = db.Column(db.String)
     description = db.Column(db.Text)
 
+    ebooks_del = db.relationship('Ebook', cascade='all, delete-orphan', backref='section-rel')
+
     def __repr__(self):
         return f"Section('{self.name}', '{self.date_created}')"
 
@@ -73,8 +75,8 @@ class Ebook(db.Model):
     name = db.Column(db.String(200), nullable=False)
     content = db.Column(db.Text, nullable=False)
     author = db.Column(db.String(100), nullable=False)
-    date_issued = db.Column(db.DateTime)
-    return_date = db.Column(db.DateTime)
+    dateIssued = db.Column(db.Date, nullable=False)
+    returnDate = db.Column(db.Date, nullable=False)
 
     section_id = db.Column(db.Integer, db.ForeignKey('section.id'), nullable=False)
     section = db.relationship('Section', backref=db.backref('ebooks', lazy=True))

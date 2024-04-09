@@ -7,6 +7,9 @@ import AddSection from './components/AddSection.js'
 import EditSection from './components/EditSection.js';
 import DeleteConfirmation from './components/DeleteConfirmation.js'
 import ShowEBooks from './components/ShowEBooks.js'
+import AddEBooks from './components/AddEBooks.js'
+import DeleteEbook from './components/DeleteEbook.js'
+import EditEBooks from './components/EditEBooks.js'
 const routes = [
     { path: '/', component: Home},
     { path: '/login', component: Login,name:'Login'},
@@ -16,9 +19,11 @@ const routes = [
     { path :'/librarian-dashboard', component: Librariandashboard,name:'Librariandashboard'},
     { path: '/edit-section/:id', component: EditSection, name: 'EditSection' },
     { path: '/delete-section/:sectionId', component: DeleteConfirmation, name: 'Deleteconformation' },
-    { path: '/sections/:sectionId/ebooks', component: ShowEBooks, name: 'ShowEBooks' }
-
-
+    { path: '/sections/:sectionId/ebooks', component: ShowEBooks, name: 'ShowEBooks' },
+    { path: '/sections/:sectionId/add-ebooks', component: AddEBooks, name: 'AddEBooks' },
+    { path: '/sections/:sectionId/ebooks/:ebookId/delete', component: DeleteEbook, name: 'DeleteEbook' },
+    { path: '/sections/:sectionId/ebooks/:ebookId/edit', component: EditEBooks, name: 'EditEBooks' }
+    
   ]
   
   export default new VueRouter({

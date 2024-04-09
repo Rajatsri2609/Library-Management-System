@@ -3,8 +3,10 @@ export default {
       <div>
         <h1>Delete Confirmation</h1>
         <h2 class="text-center text-danger">Are you sure you want to delete "{{ sectionName }}"?</h2>
-        <button @click="confirmDelete">Yes</button>
-        <button @click="cancelDelete">No</button>
+        <div style="margin-top: 50px;">
+          <button @click="confirmDelete" class="btn btn-danger" style="margin-right: 50px;">Yes</button>
+          <button @click="cancelDelete" class="btn btn-secondary" style="margin-left: 50px;">No</button>
+        </div>
       </div>
     `,
     data() {

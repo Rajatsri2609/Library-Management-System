@@ -231,8 +231,8 @@ def get_section_ebooks(current_user, section_id):
             'name': ebook.name,
             'content': ebook.content,
             'author': ebook.author,
-            'date_issued': ebook.date_issued.isoformat() if ebook.date_issued else None,
-            'return_date': ebook.return_date.isoformat() if ebook.return_date else None
+            'dateIssued': ebook.dateIssued.isoformat() if ebook.dateIssued else None,
+            'returnDate': ebook.returnDate.isoformat() if ebook.returnDate else None
         }
         ebook_data.append(ebook_info)
         
@@ -243,6 +243,139 @@ def get_section_ebooks(current_user, section_id):
     print(response_data)  # Add this line to print the response data
 
     return jsonify(response_data)  # Return response_data instead of ebook_data
+
+@app.post('/api/sections/<int:section_id>/ebooks')
+@token_required
+def add_ebook(current_user, section_id):
+    
+    try:
+        if not current_user.is_Librarian:
+            return jsonify({"message": "Unauthorized access"}), 403
+
+        section = Section.query.get(section_id)
+        if not section:
+            return jsonify({"message": "Section not found"}), 404
+
+        data = request.get_json()
+        name = data.get('name')
+        content = data.get('content')
+        author = data.get('author')
+        dateIssued = data.get('dateIssued')
+        returnDate = data.get('returnDate')
+
+        if not (name and content and author and dateIssued and returnDate):
+            return jsonify({"message": "Please provide all required fields"}), 400
+        
+        dateIssued = datetime.strptime(dateIssued, '%Y-%m-%d')
+        returnDate = datetime.strptime(returnDate, '%Y-%m-%d')
+
+        new_ebook = Ebook(
+            name=name,
+            content=content,
+            author=author,
+            dateIssued=dateIssued,
+            returnDate=returnDate,
+            section_id=section_id
+        )
+
+
+        db.session.add(new_ebook)
+        db.session.commit()
+
+        return jsonify({"message": "Ebook added successfully", "id": new_ebook.id}), 201
+    except Exception as e:
+        print("Error:", e)  # Print the error message for debugging
+        return jsonify({"message": "Internal Server Error"}), 500
+
+
+
+@app.get('/api/sections/<int:section_id>/ebooks/<int:ebook_id>')
+@token_required
+def get_ebook(current_user, section_id, ebook_id):
+    try:
+        if not current_user.is_Librarian:
+            return jsonify({"message": "Unauthorized access"}), 403
+
+        section = Section.query.get(section_id)
+        if not section:
+            return jsonify({"message": "Section not found"}), 404
+
+        ebook = Ebook.query.filter_by(id=ebook_id, section_id=section_id).first()
+        if not ebook:
+            return jsonify({"message": "Ebook not found in this section"}), 404
+
+        # Serialize the ebook object to send its details in the response
+        ebook_info = {
+            'id': ebook.id,
+            'name': ebook.name,
+            'content': ebook.content,
+            'author': ebook.author,
+            'dateIssued': ebook.dateIssued.strftime('%Y-%m-%d'),
+            'returnDate': ebook.returnDate.strftime('%Y-%m-%d')
+        }
+
+        return jsonify(ebook_info), 200
+    except Exception as e:
+        print("Error:", e)  # Print the error message for debugging
+        return jsonify({"message": "Internal Server Error"}), 500
+
+@app.delete('/api/sections/<int:section_id>/ebooks/<int:ebook_id>')
+@token_required
+def delete_ebook(current_user, section_id, ebook_id):
+    try:
+        if not current_user.is_Librarian:
+            return jsonify({"message": "Unauthorized access"}), 403
+
+        section = Section.query.get(section_id)
+        if not section:
+            return jsonify({"message": "Section not found"}), 404
+
+        ebook = Ebook.query.filter_by(id=ebook_id, section_id=section_id).first()
+        if not ebook:
+            return jsonify({"message": "Ebook not found in this section"}), 404
+
+        db.session.delete(ebook)
+        db.session.commit()
+
+        return jsonify({"message": "Ebook deleted successfully", "id": ebook.id}), 200
+    except Exception as e:
+        print("Error:", e)  # Print the error message for debugging
+        return jsonify({"message": "Internal Server Error"}), 500
+
+
+
+@app.put('/api/sections/<int:section_id>/ebooks/<int:ebook_id>')
+@token_required
+def edit_ebook(current_user, section_id, ebook_id):
+    try:
+        if not current_user.is_Librarian:
+            return jsonify({"message": "Unauthorized access"}), 403
+
+        section = Section.query.get(section_id)
+        if not section:
+            return jsonify({"message": "Section not found"}), 404
+
+        ebook = Ebook.query.filter_by(id=ebook_id, section_id=section_id).first()
+        if not ebook:
+            return jsonify({"message": "Ebook not found in this section"}), 404
+
+        data = request.get_json()
+        # Update ebook attributes with new data
+        ebook.name = data.get('name', ebook.name)
+        ebook.content = data.get('content', ebook.content)
+        ebook.author = data.get('author', ebook.author)
+        # Ensure date format is correct
+        dateIssued = datetime.strptime(data.get('dateIssued'), '%Y-%m-%d')
+        returnDate = datetime.strptime(data.get('returnDate'), '%Y-%m-%d')
+        ebook.dateIssued = dateIssued
+        ebook.returnDate = returnDate
+
+        db.session.commit()
+
+        return jsonify({"message": "Ebook updated successfully", "id": ebook.id}), 200
+    except Exception as e:
+        print("Error:", e)  # Print the error message for debugging
+        return jsonify({"message": "Internal Server Error"}), 500
 
 
 

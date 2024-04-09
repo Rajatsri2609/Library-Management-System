@@ -1,36 +1,50 @@
 export default {
   template: `
-  <div>
-    <h1>Ebooks in Section "{{ sectionName }}"</h1>
-    <div style="max-width: 1000px; margin: 20px auto; border: 1px solid #ccc;">
-      <table class="table">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Content</th>
-            <th>Author</th>
-            <th>Date Issued</th>
-            <th>Return Date</th>
-            <th>Actions</th> 
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="ebook in ebooks" :key="ebook.id">
-            <td>{{ ebook.name }}</td>
-            <td>{{ ebook.content }}</td>
-            <td>{{ ebook.author }}</td>
-            <td>{{ formatDate(ebook.date_issued) }}</td>
-            <td>{{ formatDate(ebook.return_date) }}</td>
-          </tr>
-        </tbody>
-      </table>
+    <div>
+      <h1>Ebooks in Section "{{ sectionName }}"</h1>
+      <router-link :to="'/sections/' + $route.params.sectionId + '/add-ebooks'" class='btn btn-success'>
+        <i class="fas fa-plus fa-xs"></i>
+          Add
+      </router-link>
+      <div v-if="ebooks.length > 0" style="max-width: 1000px; margin: 20px auto; border: 1px solid #ccc;">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Content</th>
+              <th>Author</th>
+              <th>Date Issued</th>
+              <th>Return Date</th>
+              <th>Actions</th> 
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="ebook in ebooks" :key="ebook.id">
+              <td>{{ ebook.name }}</td>
+              <td>{{ ebook.content }}</td>
+              <td>{{ ebook.author }}</td>
+              <td>{{ formatDate(ebook.dateIssued) }}</td>
+              <td>{{ formatDate(ebook.returnDate) }}</td>
+              <td>
+                <button @click="confirmDelete(ebook.id, ebook.name)" class="btn btn-danger">
+                    Delete
+                </button>
+                <router-link :to="'/sections/' + $route.params.sectionId + '/ebooks/' + ebook.id + '/edit'" class="btn btn-primary">
+                Edit
+              </router-link>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div v-else style="margin-top: 10px;">
+        <h2>No ebooks available in this section :(</h2>
       </div>
     </div>
-  </div>
   `,
   data() {
     return {
-      ebooks: [], // Ensure ebooks is initialized as an array
+      ebooks: [], 
       sectionName: ''
     };
   },
@@ -48,8 +62,7 @@ export default {
           }
         })
         .then(response => {
-          console.log(response.data);
-          this.ebooks = response.data;
+          this.ebooks = response.data.ebooks; // Update to access the ebooks array
           this.sectionName = response.data.section_name;
           console.log('Section Name:', this.sectionName);
         })
@@ -62,5 +75,9 @@ export default {
       const date = new Date(dateString);
       return date.toLocaleDateString();
     },
+    confirmDelete(ebookId, ebookName) {
+      this.$router.push({ name: 'DeleteEbook', params: { ebookId, ebookName} });
+      console.log(`Deleting ebook with ID: ${ebookId}, Name: ${ebookName}`);
+    }
   },
 }
