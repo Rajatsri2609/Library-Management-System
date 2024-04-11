@@ -1,12 +1,10 @@
 from flask_sqlalchemy import SQLAlchemy
-# from flask_security import UserMixin
-from datetime import datetime
 from werkzeug.security import generate_password_hash,check_password_hash
 
 
 db=SQLAlchemy()
 
-# Define models
+
 
 class Section(db.Model):
     __tablename__='section'
@@ -15,10 +13,13 @@ class Section(db.Model):
     date_created = db.Column(db.String)
     description = db.Column(db.Text)
 
-    ebooks_del = db.relationship('Ebook', cascade='all, delete-orphan', backref='section-rel')
+    ebooks_del = db.relationship('Ebook', cascade='all, delete-orphan',  back_populates='section')
+
+    ebooks = db.relationship('Ebook', back_populates='section',overlaps="ebooks_del")
 
     def __repr__(self):
         return f"Section('{self.name}', '{self.date_created}')"
+
 
 
 
@@ -48,7 +49,6 @@ class User(db.Model):
 
 class Librarian(db.Model):
     __tablename__ = 'librarian'
-
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(100), unique=True, nullable=False)
     password_hash = db.Column(db.String(100), nullable=False)
@@ -75,20 +75,18 @@ class Ebook(db.Model):
     name = db.Column(db.String(200), nullable=False)
     content = db.Column(db.Text, nullable=False)
     author = db.Column(db.String(100), nullable=False)
-    dateIssued = db.Column(db.Date, nullable=False)
-    returnDate = db.Column(db.Date, nullable=False)
+    dateIssued = db.Column(db.Date)
+    returnDate = db.Column(db.Date)
 
     section_id = db.Column(db.Integer, db.ForeignKey('section.id'), nullable=False)
-    section = db.relationship('Section', backref=db.backref('ebooks', lazy=True))
-
-    def __repr__(self):
-        return f"Ebook('{self.name}', '{self.author}', '{self.date_issued}', '{self.return_date}')"
+    section = db.relationship('Section', back_populates='ebooks_del')
     
 class Access(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    ebook_id = db.Column(db.Integer, db.ForeignKey('ebook.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     section_id = db.Column(db.Integer, db.ForeignKey('section.id'), nullable=False)
-    granted_access_date = db.Column(db.DateTime, nullable=False)
+    granted_access_date = db.Column(db.DateTime)
     revoked_access_date = db.Column(db.DateTime)
 
     librarian_id = db.Column(db.Integer, db.ForeignKey('librarian.id'), nullable=False)
@@ -99,15 +97,15 @@ class Access(db.Model):
 
 class BookRequest(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    book_id = db.Column(db.Integer, db.ForeignKey('ebook.id'), nullable=False)
+    ebook_id = db.Column(db.Integer, db.ForeignKey('ebook.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    request_date = db.Column(db.DateTime, nullable=False)
-    return_date = db.Column(db.DateTime, nullable=False)
+    request_date = db.Column(db.DateTime)
+    return_date = db.Column(db.DateTime)
 
     user = db.relationship('User', backref=db.backref('book_requests', lazy=True))
 
     def __repr__(self):
-        return f"BookRequest('{self.book_id}', '{self.user_id}', '{self.request_date}', '{self.return_date}')"
+        return f"BookRequest('{self.ebook_id}', '{self.user_id}', '{self.request_date}', '{self.return_date}')"
     
 class Feedback(db.Model):
     id = db.Column(db.Integer, primary_key=True)

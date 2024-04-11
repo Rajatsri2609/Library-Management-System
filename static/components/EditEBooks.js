@@ -47,7 +47,8 @@ export default {
           })
           .then(response => {
             // Set ebookData to the fetched ebook data
-            this.ebookData = response.data;
+            const ebookData = response.data;
+            this.ebookData = { ...ebookData }; // Update ebookData with fetched data
           })
           .catch(error => {
             console.error('Error fetching ebook data:', error);

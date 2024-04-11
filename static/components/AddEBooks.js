@@ -15,14 +15,6 @@ export default {
           <label for="author" style="font-weight: bold; margin-bottom: 10px; display: block; color: #333;">Author:</label>
           <input type="text" id="author" v-model="ebook.author" required style="background-color: #EBEBEB; width: 100%; padding: 0.75rem; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 1rem;">
         </div>
-        <div style="margin-bottom: 20px;">
-          <label for="dateIssued" style="font-weight: bold; margin-bottom: 10px; display: block; color: #333;">Date Issued:</label>
-          <input type="date" id="dateIssued" v-model="ebook.dateIssued" :min="todayDate" required style="background-color: #EBEBEB; width: 100%; padding: 0.75rem; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 1rem;">
-        </div>
-        <div style="margin-bottom: 20px;">
-          <label for="returnDate" style="font-weight: bold; margin-bottom: 10px; display: block; color: #333;">Return Date:</label>
-          <input type="date" id="returnDate" v-model="ebook.returnDate" :min="ebook.dateIssued" required style="background-color: #EBEBEB; width: 100%; padding: 0.75rem; border: 1px solid #ccc; border-radius: 4px; margin-bottom: 1rem;">
-        </div>
         <button type="submit" style="background-color: #007bff; color: #fff; padding: 0.75rem 1.5rem; border: none; border-radius: 4px; cursor: pointer; transition: background-color 0.3s ease;">Add Ebook</button>
       </form>
     </div>

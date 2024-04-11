@@ -69,6 +69,7 @@ export default {
               console.log("Login data:", data);
               localStorage.setItem('auth-token', data.token);
               localStorage.setItem('is_Librarian', data.is_Librarian);
+              localStorage.setItem('username',data.username);
               
               // Pass the username as a query parameter in the redirect
               this.$router.push({ path: '/', query: {username: data.username, is_Librarian: data.is_Librarian.toString()} });

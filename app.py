@@ -1,26 +1,54 @@
 from models import *
-from flask import Flask,render_template, request,jsonify,flash, redirect, url_for, session
+from flask import Flask,render_template, request,jsonify,flash
 import jwt
 from functools import wraps
 from jwt import encode
 from datetime import datetime
-# from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS 
 from flask_restful import *
 from flask import current_app as app, jsonify, request, render_template
+from worker import celery_init_app
+from tasks import say_hello
+from celery import Celery, Task
+from flask import Flask
 
+def create_app() -> Flask:
+    app = Flask(__name__)
+    app.config['SECRET_KEY'] = 'abcd'
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///project_db.sqlite3'
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config['SECURITY_TOKEN_AUTHENTICATION_HEADER'] = 'Authentication-Token'
+    CORS(app)
+    db.init_app(app)
+    app.app_context().push()
+    db.create_all()
+    app.config.from_mapping(
+        CELERY=dict(
+            broker_url = "redis://localhost/1",
+            result_backend = "redis://localhost/2",
+            timezone = "Asia/kolkata",
+            broker_connection_retry_on_startup=True,
+            worker_cancel_long_running_tasks_on_connection_loss=True,
+        ),
+    )
+    app.config.from_prefixed_env()
+    celery_init_app(app)
+    return app
+    
+app=create_app()
+celery_app = app.extensions["celery"]
 
-app = Flask(__name__)
-app.config['SECRET_KEY'] = 'abcd'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///project_db.sqlite3'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['SECURITY_TOKEN_AUTHENTICATION_HEADER'] = 'Authentication-Token'
+def celery_init_app(app):
+    class FlaskTask(Task):
+        def __call__(self, *args: object, **kwargs: object) -> object:
+            with app.app_context():
+                return self.run(*args, **kwargs)
 
-CORS(app)
-db.init_app(app)
-#api.init_app(app)
-app.app_context().push()
-db.create_all()
+    celery_app = Celery(app.name)
+    celery_app.config_from_object(app.config["CELERY"])
+    celery_app.Task = FlaskTask
+    app.extensions["celery"] = celery_app
+    return celery_app
 
 def token_required(f):
     @wraps(f)
@@ -37,6 +65,7 @@ def token_required(f):
             data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256'])
             current_user = User.query.filter_by(username=data['username']).first() or \
                            Librarian.query.filter_by(username=data['username']).first()
+            
         except:
             return jsonify({'message': 'Token is invalid'}), 401
 
@@ -44,8 +73,8 @@ def token_required(f):
 
     return decorated
 
-librarian = Librarian.query.filter_by(username='librarian').first()
 
+librarian = Librarian.query.filter_by(username='librarian').first()
 if not librarian:
     librarian = Librarian(username='librarian', password='librarian', name='Librarian', is_Librarian=True)
     db.session.add(librarian)
@@ -69,9 +98,11 @@ def user_login():
     if user:
         if user.check_password(password):
             # Authentication successful
-            token = jwt.encode({'username': user.username},app.config['SECRET_KEY'], algorithm='HS256')
+            token = jwt.encode({'username': user.username, 'is_librarian': False}, app.config['SECRET_KEY'], algorithm='HS256')
+            print("Generated token:", token)
             # Include additional user information in the token if needed
             flash("Login Successful","success")
+            print("Decoded token payload:", jwt.decode(token, app.config['SECRET_KEY'], algorithms=['HS256']))
             return jsonify({"message": "Login successful", "token": token,"username": user.username,"is_Librarian":user.is_Librarian}), 200
         else:
             return jsonify({"message": "Incorrect password"}), 401
@@ -114,7 +145,7 @@ def register():
     db.session.commit()
 
     # Generate token for the new user
-    token = jwt.encode({'username': new_user.username}, app.config['SECRET_KEY'], algorithm='HS256')
+    token = jwt.encode({'username': new_user.username,'is_librarian': False}, app.config['SECRET_KEY'], algorithm='HS256')
 
     return jsonify({"message": "User registered successfully", "token": token}), 201
 
@@ -122,9 +153,6 @@ def register():
 @app.get('/api/sections')
 @token_required
 def get_sections(current_user):
-    if not current_user.is_Librarian:
-        return jsonify({"message": "Unauthorized access"}), 403
-
     sections = Section.query.all()
     section_data = []
     for section in sections:
@@ -132,7 +160,8 @@ def get_sections(current_user):
             'id': section.id,
             'name': section.name,
             'num_ebooks': len(section.ebooks),
-            'description':section.description
+            'description': section.description,
+            'ebooks': [{'id': ebook.id, 'name': ebook.name, 'author': ebook.author} for ebook in section.ebooks]
         }
         section_data.append(section_info)
     return jsonify(section_data)
@@ -260,21 +289,21 @@ def add_ebook(current_user, section_id):
         name = data.get('name')
         content = data.get('content')
         author = data.get('author')
-        dateIssued = data.get('dateIssued')
-        returnDate = data.get('returnDate')
+        # dateIssued = data.get('dateIssued')
+        # returnDate = data.get('returnDate')
 
-        if not (name and content and author and dateIssued and returnDate):
+        if not (name and content and author):
             return jsonify({"message": "Please provide all required fields"}), 400
         
-        dateIssued = datetime.strptime(dateIssued, '%Y-%m-%d')
-        returnDate = datetime.strptime(returnDate, '%Y-%m-%d')
+        # dateIssued = datetime.strptime(dateIssued, '%Y-%m-%d')
+        # returnDate = datetime.strptime(returnDate, '%Y-%m-%d')
 
         new_ebook = Ebook(
             name=name,
             content=content,
             author=author,
-            dateIssued=dateIssued,
-            returnDate=returnDate,
+            # dateIssued=dateIssued,
+            # returnDate=returnDate,
             section_id=section_id
         )
 
@@ -310,8 +339,8 @@ def get_ebook(current_user, section_id, ebook_id):
             'name': ebook.name,
             'content': ebook.content,
             'author': ebook.author,
-            'dateIssued': ebook.dateIssued.strftime('%Y-%m-%d'),
-            'returnDate': ebook.returnDate.strftime('%Y-%m-%d')
+            # 'dateIssued': ebook.dateIssued.strftime('%Y-%m-%d'),
+            # 'returnDate': ebook.returnDate.strftime('%Y-%m-%d')
         }
 
         return jsonify(ebook_info), 200
@@ -365,10 +394,10 @@ def edit_ebook(current_user, section_id, ebook_id):
         ebook.content = data.get('content', ebook.content)
         ebook.author = data.get('author', ebook.author)
         # Ensure date format is correct
-        dateIssued = datetime.strptime(data.get('dateIssued'), '%Y-%m-%d')
-        returnDate = datetime.strptime(data.get('returnDate'), '%Y-%m-%d')
-        ebook.dateIssued = dateIssued
-        ebook.returnDate = returnDate
+        # dateIssued = datetime.strptime(data.get('dateIssued'), '%Y-%m-%d')
+        # returnDate = datetime.strptime(data.get('returnDate'), '%Y-%m-%d')
+        # ebook.dateIssued = dateIssued
+        # ebook.returnDate = returnDate
 
         db.session.commit()
 
@@ -377,7 +406,75 @@ def edit_ebook(current_user, section_id, ebook_id):
         print("Error:", e)  # Print the error message for debugging
         return jsonify({"message": "Internal Server Error"}), 500
 
+@app.post('/api/request-access/<int:ebook_id>')
+@token_required
+def request_access(current_user, ebook_id):
+    # Retrieve the ebook object
+    ebook = Ebook.query.get(ebook_id)
+    if not ebook:
+        return jsonify({"message": "Ebook not found"}), 404
 
+    # Check if the user already has access to the ebook
+    existing_access = Access.query.filter_by(user_id=current_user.id, ebook_id=ebook_id).first()
+    if existing_access:
+        return jsonify({"message": "Access already granted for this ebook"}), 400
+    
+    # Check if there's already a pending request for any ebook within the same section
+    existing_requests = BookRequest.query \
+        .join(Ebook, BookRequest.ebook_id == Ebook.id) \
+        .filter(Ebook.section_id == ebook.section_id) \
+        .filter(Ebook.id==ebook.id)\
+        .filter(BookRequest.user_id == current_user.id) \
+        .filter(BookRequest.return_date == None) \
+        .all()
+
+    if existing_requests:
+        print(existing_requests)
+        return jsonify({"message": "There is already a pending request for an ebook from this section"}), 400
+    
+    # Create a new book request
+    book_request = BookRequest(
+        user_id=current_user.id,
+        ebook_id=ebook_id,  
+        request_date=datetime.utcnow(),
+        return_date=None
+    )
+    db.session.add(book_request)
+    db.session.commit()
+    return jsonify({"message": "Access request sent successfully"}), 201
+
+
+
+@app.get('/api/pending-requests')
+@token_required
+def get_pending_requests(current_user):
+    try:
+        pending_requests = BookRequest.query.filter_by(return_date=None).all()
+
+
+        pending_requests_info = []
+        for request in pending_requests:
+            request_info = {
+                'id': request.id,
+                'user_id': request.user_id,
+                'ebook_id': request.ebook_id,  
+                'request_date': request.request_date.isoformat()
+            }
+            pending_requests_info.append(request_info)
+
+        return jsonify(pending_requests_info), 200
+    except Exception as e:
+        print("Error:", e)  # Print the error message for debugging
+        return jsonify({"message": "Internal Server Error"}), 500
+
+
+
+@app.get('/say-hello')
+def say_helloo():
+    print("GET/say-hello")
+    t = say_hello.delay()
+    print(t.id)
+    return jsonify({"task-id":t.id})
 
 
 if __name__ == "__main__":
