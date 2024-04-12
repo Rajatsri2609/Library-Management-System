@@ -8,9 +8,11 @@ from flask_cors import CORS
 from flask_restful import *
 from flask import current_app as app, jsonify, request, render_template
 from worker import celery_init_app
-from tasks import say_hello
+from tasks import say_hello 
 from celery import Celery, Task
 from flask import Flask
+from datetime import datetime, timezone
+
 
 def create_app() -> Flask:
     app = Flask(__name__)
@@ -435,14 +437,14 @@ def request_access(current_user, ebook_id):
     # Create a new book request
     book_request = BookRequest(
         user_id=current_user.id,
-        ebook_id=ebook_id,  
+        ebook_id=ebook_id,
+        section_id=ebook.section_id,
         request_date=datetime.utcnow(),
         return_date=None
     )
     db.session.add(book_request)
     db.session.commit()
     return jsonify({"message": "Access request sent successfully"}), 201
-
 
 
 @app.get('/api/pending-requests')
@@ -467,14 +469,73 @@ def get_pending_requests(current_user):
         print("Error:", e)  # Print the error message for debugging
         return jsonify({"message": "Internal Server Error"}), 500
 
+@app.post('/api/grant-access/<int:request_id>')
+@token_required
+def grant_access(current_user, request_id):
+    try:
+        if not current_user.is_Librarian:
+            return jsonify({"message": "Unauthorized access"}), 403
+
+        # Find the pending request
+        book_request = BookRequest.query.session.get(BookRequest, request_id)
+        if not book_request:
+            return jsonify({"message": "Request not found"}), 404
+
+        # Create a new entry in the Access table
+        access = Access(
+            ebook_id=book_request.ebook_id,
+            user_id=book_request.user_id,
+            section_id=book_request.section_id,
+            granted_access_date=datetime.now(timezone.utc),
+            revoked_access_date=None,
+            librarian_id=current_user.id
+        )
+        db.session.add(access)
+
+        # Delete the pending request
+        db.session.delete(book_request)
+
+        db.session.commit()
+
+        return jsonify({"message": "Access granted successfully"}), 200
+    except Exception as e:
+        print("Error:", e)
+        return jsonify({"message": "Internal Server Error"}), 500
+    
+
+@app.post('/api/revoke-access/<int:request_id>')
+@token_required
+def revoke_access(current_user, request_id):
+    try:
+        if not current_user.is_Librarian:
+            return jsonify({"message": "Unauthorized access"}), 403
+
+        # Find the access entry to revoke
+        access_entry = Access.query.get(request_id)
+        if not access_entry:
+            return jsonify({"message": "Access entry not found"}), 404
+
+        # Set the revoked access date to the current time
+        access_entry.revoked_access_date = datetime.now(timezone.utc)
+
+        # Delete the access entry
+        db.session.delete(access_entry)
+        db.session.commit()
+
+        return jsonify({"message": "Access revoked successfully"}), 200
+    except Exception as e:
+        print("Error:", e)
+        return jsonify({"message": "Internal Server Error"}), 500
+
 
 
 @app.get('/say-hello')
 def say_helloo():
     print("GET/say-hello")
-    t = say_hello.delay()
-    print(t.id)
-    return jsonify({"task-id":t.id})
+    # Enqueue the Celery task instead of calling it directly
+    task = say_hello.delay()
+    print(task.id)
+    return jsonify({"task-id": task.id})
 
 
 if __name__ == "__main__":

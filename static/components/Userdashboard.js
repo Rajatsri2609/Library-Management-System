@@ -26,7 +26,7 @@ export default {
   data() {
     return {
       sections: [],
-      pendingRequests: [], // Store user's pending requests
+      pendingRequests: [],
       error: null
     };
   },

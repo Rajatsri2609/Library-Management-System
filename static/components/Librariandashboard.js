@@ -45,6 +45,9 @@ export default {
         </tbody>
       </table>
     </div>
+    <button @click="viewPendingRequests" class='btn btn-info'>
+        Pending Requests
+    </button>
   </div>
   `,
   data() {
@@ -74,7 +77,11 @@ export default {
     },
     confirmDelete(sectionId, sectionName) {
       this.$router.push({ name: 'Deleteconformation', params: { sectionId, sectionName } });
+    },
+    viewPendingRequests() {
+      this.$router.push({ name: 'pendingrequest' });
     }
+
   }
 };
 

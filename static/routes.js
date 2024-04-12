@@ -10,6 +10,7 @@ import ShowEBooks from './components/ShowEBooks.js'
 import AddEBooks from './components/AddEBooks.js'
 import DeleteEbook from './components/DeleteEbook.js'
 import EditEBooks from './components/EditEBooks.js'
+import pendingrequest from './components/pendingrequest.js'
 const routes = [
     { path: '/', component: Home},
     { path: '/login', component: Login,name:'Login'},
@@ -22,7 +23,8 @@ const routes = [
     { path: '/sections/:sectionId/ebooks', component: ShowEBooks, name: 'ShowEBooks' },
     { path: '/sections/:sectionId/add-ebooks', component: AddEBooks, name: 'AddEBooks' },
     { path: '/sections/:sectionId/ebooks/:ebookId/delete', component: DeleteEbook, name: 'DeleteEbook' },
-    { path: '/sections/:sectionId/ebooks/:ebookId/edit', component: EditEBooks, name: 'EditEBooks' }
+    { path: '/sections/:sectionId/ebooks/:ebookId/edit', component: EditEBooks, name: 'EditEBooks' },
+    { path :'/api/pending-requests' , component: pendingrequest, name: 'pendingrequest'}
     
   ]
   

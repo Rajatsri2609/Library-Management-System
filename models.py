@@ -21,8 +21,6 @@ class Section(db.Model):
         return f"Section('{self.name}', '{self.date_created}')"
 
 
-
-
 class User(db.Model):
     __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
@@ -77,8 +75,8 @@ class Ebook(db.Model):
     author = db.Column(db.String(100), nullable=False)
     dateIssued = db.Column(db.Date)
     returnDate = db.Column(db.Date)
-
     section_id = db.Column(db.Integer, db.ForeignKey('section.id'), nullable=False)
+
     section = db.relationship('Section', back_populates='ebooks_del')
     
 class Access(db.Model):
@@ -99,6 +97,7 @@ class BookRequest(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     ebook_id = db.Column(db.Integer, db.ForeignKey('ebook.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    section_id = db.Column(db.Integer, db.ForeignKey('section.id'), nullable=False)
     request_date = db.Column(db.DateTime)
     return_date = db.Column(db.DateTime)
 
