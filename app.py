@@ -24,22 +24,12 @@ def create_app() -> Flask:
     db.init_app(app)
     app.app_context().push()
     db.create_all()
-    app.config.from_mapping(
-        CELERY=dict(
-            broker_url = "redis://localhost/1",
-            result_backend = "redis://localhost/2",
-            timezone = "Asia/kolkata",
-            broker_connection_retry_on_startup=True,
-            worker_cancel_long_running_tasks_on_connection_loss=True,
-        ),
-    )
-    app.config.from_prefixed_env()
     celery_init_app(app)
     return app
     
 app=create_app()
 celery_app=celery_init_app(app)
-celery_app = app.extensions["celery"]
+
 
 def token_required(f):
     @wraps(f)
