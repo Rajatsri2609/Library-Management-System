@@ -11,6 +11,7 @@ import AddEBooks from './components/AddEBooks.js'
 import DeleteEbook from './components/DeleteEbook.js'
 import EditEBooks from './components/EditEBooks.js'
 import pendingrequest from './components/pendingrequest.js'
+import ShowAccessedbooks from './components/ShowAccessedbooks.js'
 const routes = [
     { path: '/', component: Home},
     { path: '/login', component: Login,name:'Login'},
@@ -24,7 +25,8 @@ const routes = [
     { path: '/sections/:sectionId/add-ebooks', component: AddEBooks, name: 'AddEBooks' },
     { path: '/sections/:sectionId/ebooks/:ebookId/delete', component: DeleteEbook, name: 'DeleteEbook' },
     { path: '/sections/:sectionId/ebooks/:ebookId/edit', component: EditEBooks, name: 'EditEBooks' },
-    { path :'/api/pending-requests' , component: pendingrequest, name: 'pendingrequest'}
+    { path :'/api/pending-requests' , component: pendingrequest, name: 'pendingrequest'},
+    { path:'/api/accessed-books',component:ShowAccessedbooks,name:'ShowAccessedbooks'}
     
   ]
   

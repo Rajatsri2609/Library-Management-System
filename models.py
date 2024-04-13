@@ -122,5 +122,3 @@ class Feedback(db.Model):
 
 
 
-# Define any additional models or relationships as needed
-

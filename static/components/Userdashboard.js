@@ -10,11 +10,15 @@ export default {
             <div class="ebook-description" style="display: flex; flex-direction: column; align-items: flex-start;">
               <h4 style="margin: 0;">{{ ebook.name }}</h4>
               <p style="margin: 0;">Author: {{ ebook.author }}</p>
-              <template v-if="!ebook.accessRequested">
-                <button v-if="!isRequestPending(ebook)" @click="requestAccess(section.id, ebook)" class="btn btn-success">Request Access</button>
-                <p v-else>Request Pending...</p>
+              <template v-if="!ebook.accessRequested && !ebook.accessGranted">
+                <button @click="requestAccess(section.id, ebook)" class="btn btn-success">Request Access</button>
               </template>
-              
+              <template v-else-if="ebook.accessRequested && !ebook.accessGranted">
+                <p>Request Pending...</p>
+              </template>
+              <template v-else-if="ebook.accessGranted">
+                <button @click="showContent(ebook)" class="btn btn-primary">Show Content</button>
+              </template>
             </div>
           </div>
         </div>
@@ -27,13 +31,13 @@ export default {
     return {
       sections: [],
       pendingRequests: [],
-      error: null
+      error: null,
     };
   },
   computed: {
     username() {
-      return localStorage.getItem('username');
-    }
+      return localStorage.getItem("username");
+    },
   },
   created() {
     this.fetchSections();
@@ -41,77 +45,89 @@ export default {
   },
   methods: {
     fetchSections() {
-      const token = localStorage.getItem('auth-token');
-      axios.get('/api/sections', {
+      const token = localStorage.getItem("auth-token");
+      axios
+        .get("/api/sections", {
           headers: {
-            Authorization: `Bearer ${token}`
-          }
+            Authorization: `Bearer ${token}`,
+          },
         })
-        .then(response => {
+        .then((response) => {
           if (response.status !== 200) {
-            throw new Error('Network response was not ok');
+            throw new Error("Network response was not ok");
           }
           return response.data;
         })
-        .then(data => {
-          data.forEach(section => {
-            section.ebooks.forEach(ebook => {
+        .then((data) => {
+          data.forEach((section) => {
+            section.ebooks.forEach((ebook) => {
               ebook.accessRequested = false;
             });
           });
           this.sections = data;
         })
-        .catch(error => {
-          console.error('Error fetching sections:', error);
+        .catch((error) => {
+          console.error("Error fetching sections:", error);
         });
     },
     fetchPendingRequests() {
-      const token = localStorage.getItem('auth-token');
-      axios.get('/api/pending-requests', {
+      const token = localStorage.getItem("auth-token");
+      axios
+        .get("/api/pending-requests", {
           headers: {
-            Authorization: `Bearer ${token}`
-          }
+            Authorization: `Bearer ${token}`,
+          },
         })
-        .then(response => {
+        .then((response) => {
           if (response.status !== 200) {
-            throw new Error('Network response was not ok');
+            throw new Error("Network response was not ok");
           }
           return response.data;
         })
-        .then(data => {
+        .then((data) => {
           this.pendingRequests = data; // Store user's pending requests
-          // Update accessRequested for ebooks with pending requests
-          this.sections.forEach(section => {
-            section.ebooks.forEach(ebook => {
+          // Update accessRequested and accessGranted for ebooks with pending requests
+          this.sections.forEach((section) => {
+            section.ebooks.forEach((ebook) => {
               // Check if there's a pending request for the ebook
-              ebook.accessRequested = this.isRequestPending(ebook);
+              const pendingRequest = this.pendingRequests.find(
+                (request) => request.ebook_id === ebook.id
+              );
+              ebook.accessRequested = !!pendingRequest;
+              ebook.accessGranted = pendingRequest ? pendingRequest.accessGranted : false;
             });
           });
         })
-        .catch(error => {
-          console.error('Error fetching pending requests:', error);
+        .catch((error) => {
+          console.error("Error fetching pending requests:", error);
         });
     },
     requestAccess(sectionId, ebook) {
-      const token = localStorage.getItem('auth-token');
-      axios.post(`/api/request-access/${ebook.id}`, null, {
+      const token = localStorage.getItem("auth-token");
+      axios
+        .post(`/api/request-access/${ebook.id}`, null, {
           headers: {
-            Authorization: `Bearer ${token}`
-          }
+            Authorization: `Bearer ${token}`,
+          },
         })
-        .then(response => {
+        .then((response) => {
           console.log(response.data.message);
           ebook.accessRequested = true;
-          console.log('Response:', response.data)
+          console.log("Response:", response.data);
           this.fetchPendingRequests();
         })
-        .catch(error => {
-          console.error('Error requesting access:', error);
+        .catch((error) => {
+          console.error("Error requesting access:", error);
         });
     },
     isRequestPending(ebook) {
-      return this.pendingRequests.some(request => request.ebook_id === ebook.id);
-    }
-    
-  }
+      return this.pendingRequests.some(
+        (request) => request.ebook_id === ebook.id
+      );
+    },
+    showContent(ebook) {
+      // Redirect to the page where the content of the accessed book should be shown
+      this.$router.push({ name: 'ShowAccessedbooks', params: { ebookId: ebook.id } });
+    },
+  },
 };

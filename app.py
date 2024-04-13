@@ -447,27 +447,47 @@ def request_access(current_user, ebook_id):
     return jsonify({"message": "Access request sent successfully"}), 201
 
 
+from flask import jsonify
+
 @app.get('/api/pending-requests')
 @token_required
 def get_pending_requests(current_user):
     try:
-        pending_requests = BookRequest.query.filter_by(return_date=None).all()
-
-
         pending_requests_info = []
-        for request in pending_requests:
-            request_info = {
-                'id': request.id,
-                'user_id': request.user_id,
-                'ebook_id': request.ebook_id,  
-                'request_date': request.request_date.isoformat()
-            }
-            pending_requests_info.append(request_info)
+        
+        # Check if there are pending requests in the Access table
+        access_requests = Access.query.filter_by(revoked_access_date=None).all()
+        if access_requests:
+            for access in access_requests:
+                request_info = {
+                    'id': access.id,
+                    'user_id': access.user_id,
+                    'ebook_id': access.ebook_id,
+                    'request_date': access.granted_access_date.isoformat(),
+                    'accessGranted': True,  # Access is already granted
+                    'accessButtonText': 'Revoke Access'  # Button text for revoking access
+                }
+                pending_requests_info.append(request_info)
+        else:
+            # If there are no pending requests in Access table, fetch from BookRequest table
+            book_requests = BookRequest.query.filter_by(return_date=None).all()
+            for request in book_requests:
+                request_info = {
+                    'id': request.id,
+                    'user_id': request.user_id,
+                    'ebook_id': request.ebook_id,
+                    'request_date': request.request_date.isoformat(),
+                    'accessGranted': False,  # Access needs to be granted
+                    'accessButtonText': 'Grant Access'  # Button text for granting access
+                }
+                pending_requests_info.append(request_info)
 
         return jsonify(pending_requests_info), 200
     except Exception as e:
-        print("Error:", e)  # Print the error message for debugging
+        print("Error:", e)
         return jsonify({"message": "Internal Server Error"}), 500
+
+
 
 @app.post('/api/grant-access/<int:request_id>')
 @token_required
@@ -527,7 +547,50 @@ def revoke_access(current_user, request_id):
         print("Error:", e)
         return jsonify({"message": "Internal Server Error"}), 500
 
+@app.get('/api/accessed-books')
+@token_required
+def get_accessed_books(current_user):
+    try:
+        accessed_books_info = []
 
+        # Query the Access table to get the books that have been granted access
+        accessed_books = db.session.query(Access, Ebook).\
+            join(Ebook, Access.ebook_id == Ebook.id).\
+            filter(Access.revoked_access_date == None).all()
+
+        # Iterate over the accessed books and collect their information
+        for access, ebook in accessed_books:
+            book_info = {
+                'id': ebook.id,
+                'name': ebook.name,
+                'author': ebook.author,
+                'content': ebook.content
+            }
+            accessed_books_info.append(book_info)
+
+        return jsonify(accessed_books_info), 200
+    except Exception as e:
+        print("Error:", e)
+        return jsonify({"message": "Internal Server Error"}), 500
+
+@app.get('/api/book-content/<int:book_id>')
+@token_required
+def get_book_content(current_user, book_id):
+    try:
+        # Check if the current user has access to the book
+        access = Access.query.filter_by(user_id=current_user.id, ebook_id=book_id).first()
+        if not access:
+            return jsonify({"message": "You don't have access to this book."}), 403
+        
+        # Fetch the book content from the eBook table
+        ebook = Ebook.query.get(book_id)
+        if not ebook:
+            return jsonify({"message": "Book not found."}), 404
+        
+        return jsonify({"content": ebook.content}), 200
+    except Exception as e:
+        print("Error:", e)
+        return jsonify({"message": "Internal Server Error"}), 500
 
 @app.get('/say-hello')
 def say_helloo():
