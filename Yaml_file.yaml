@@ -1,0 +1,80 @@
+paths:
+  /:
+    get:
+      summary: Home
+      operationId: home
+  /user-login:
+    post:
+      summary: User Login
+      operationId: user_login
+  /register:
+    post:
+      summary: Register
+      operationId: register
+  /api/sections:
+    get:
+      summary: Get Sections
+      operationId: get_sections
+  /api/add-section:
+    post:
+      summary: Add Section
+      operationId: add_section
+  /api/sections/{section_id}:
+    get:
+      summary: Get Section Details
+      operationId: get_section_details
+    put:
+      summary: Update Section
+      operationId: update_section
+    delete:
+      summary: Delete Section
+      operationId: delete_section
+  /api/sections/{section_id}/ebooks:
+    get:
+      summary: Get Section Ebooks
+      operationId: get_section_ebooks
+    post:
+      summary: Add Ebook
+      operationId: add_ebook
+  /api/sections/{section_id}/ebooks/{ebook_id}:
+    get:
+      summary: Get Ebook
+      operationId: get_ebook
+    put:
+      summary: Edit Ebook
+      operationId: edit_ebook
+    delete:
+      summary: Delete Ebook
+      operationId: delete_ebook
+  /api/request-access/{ebook_id}:
+    post:
+      summary: Request Access
+      operationId: request_access
+  /api/pending-requests:
+    get:
+      summary: Get Pending Requests
+      operationId: get_pending_requests
+  /api/grant-access/{request_id}:
+    post:
+      summary: Grant Access
+      operationId: grant_access
+  /api/revoke-access/{request_id}:
+    post:
+      summary: Revoke Access
+      operationId: revoke_access
+  /api/accessed-books:
+    get:
+      summary: Get Accessed Books
+      operationId: get_accessed_books
+  /api/book-content/{book_id}:
+    get:
+      summary: Get Book Content
+      operationId: get_book_content
+  /api/return-book/{book_id}:
+    delete:
+      summary: Return Book
+      operationId: return_book
+  /api/feedback/{book_id}:
+    post:
+      summary: Submit Feedback
+      operationId: submit_feedback

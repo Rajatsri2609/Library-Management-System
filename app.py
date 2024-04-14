@@ -8,10 +8,14 @@ from flask_cors import CORS
 from flask_restful import *
 from flask import current_app as app, jsonify, request, render_template
 from worker import celery_init_app
-from tasks import say_hello 
+#from tasks import say_hello
+from tasks import daily_reminder
+from tasks import report
 from celery import Celery, Task
 from flask import Flask
 from datetime import datetime, timezone
+from celery.schedules import crontab
+from sqlalchemy import func
 
 
 def create_app() -> Flask:
@@ -107,6 +111,7 @@ def register():
     username = data.get('username')
     password = data.get('password')
     name = data.get('name')
+    email=data.get('email')
 
     if not username or not password or not name:
         flash("Username, password, or name not provided", "error")
@@ -121,7 +126,7 @@ def register():
     if existing_user:
         return jsonify({"message": "Username already exists"}), 409
 
-    new_user = User(username=username, password=password, name=name)
+    new_user = User(username=username, password=password, name=name,email=email)
     db.session.add(new_user)
     db.session.commit()
 
@@ -413,6 +418,15 @@ def request_access(current_user, ebook_id):
         print(existing_requests)
         return jsonify({"message": "There is already a pending request for an ebook from this section"}), 400
     
+
+    max_books_requested = 5
+    num_books_requested = db.session.query(func.count(BookRequest.id)) \
+        .filter_by(user_id=current_user.id, return_date=None) \
+        .scalar()
+
+    if num_books_requested >= max_books_requested:
+        return jsonify({"message": f"You have already requested access to {max_books_requested} books. You cannot request access to more books."}), 400
+    
     # Create a new book request
     book_request = BookRequest(
         user_id=current_user.id,
@@ -626,14 +640,31 @@ def submit_feedback(current_user, book_id):
 
     return jsonify({"message": "Feedback submitted successfully"}), 201    
 
-@app.get('/say-hello')
-def say_helloo():
-    print("GET/say-hello")
-    # Enqueue the Celery task instead of calling it directly
-    task = say_hello.delay()
-    print(task.id)
-    return jsonify({"task-id": task.id})
+#@app.get('/say-hello')
+#def say_helloo():
+#    print("GET/say-hello")
+#    # Enqueue the Celery task instead of calling it directly
+#    task = say_hello.delay()
+#    print(task.id)
+#    return jsonify({"task-id": task.id})
 
+
+#daily mails
+
+@celery_app.on_after_configure.connect
+def send_email(sender, **kwargs):
+    sender.add_periodic_task(
+        crontab(hour=19, minute=00),
+        daily_reminder.s('rajat123@email.com', 'Daily reminder'),
+    )
+
+#monthly report
+@celery_app.on_after_configure.connect
+def send_email(sender, **kwargs):
+    sender.add_periodic_task(
+        crontab(hour=19, minute=00,day_of_month=30),
+        report.s('rajat123@email.com', 'Monthly Report'),
+    )    
 
 if __name__ == "__main__":
     app.run(debug=True)

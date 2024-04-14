@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Feedback Report</title>
+</head>
+<body>
+  <h1>Feedback Report</h1>
+  <ul>
+    {% for item in feedback %}
+      <li>User ID: {{ item.user_id }}</li>
+      <li>Ebook ID: {{ item.ebook_id }}</li>
+      <li>Rating: {{ item.rating }}</li>
+      <li>Comment: {{ item.comment }}</li>
+      <li>Feedback Date: {{ item.feedback_date }}</li>
+      <hr />
+    {% endfor %}
+  </ul>
+</body>
+</html>

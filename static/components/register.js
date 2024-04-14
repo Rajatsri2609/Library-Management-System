@@ -27,6 +27,10 @@ export default {
             <input class="input" type="text" name="name" placeholder="Name" v-model="cred.name">
             <span class="focus-input" data-placeholder="Name"></span>
           </div>
+          <div>
+          <input class="input" type="email" name="email" placeholder="Email" v-model="cred.email">
+          <span class="focus-input" data-placeholder="Email"></span>
+          </div>
           
           <div class="container-login-form-btn">
             <div class="wrap-login-form-btn">
@@ -45,6 +49,7 @@ export default {
                 username: null,
                 password: null,
                 name: null,
+                email: null,
             },
             error: null,
         }
@@ -55,6 +60,7 @@ export default {
             username: this.cred.username,
             password: this.cred.password,
             name: this.cred.name,
+            email:this.cred.email,
         };
         
           const res = await fetch('/register' , {

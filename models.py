@@ -26,6 +26,7 @@ class User(db.Model):
     username = db.Column(db.String(100), unique=True, nullable=False)
     password_hash = db.Column(db.String(100), nullable=False)
     name = db.Column(db.String(100), nullable=False)
+    email=db.Column(db.String(100),nullable=False)
     is_Librarian = db.Column(db.Boolean, nullable=False, default=False)
     # Add more user attributes as needed
 
