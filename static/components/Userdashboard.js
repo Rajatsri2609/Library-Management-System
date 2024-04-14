@@ -1,9 +1,18 @@
 export default {
   template: `
   <div>
+    <div class="search-bar">
+      <input type="text" v-model="searchQuery" placeholder="Search...">
+      <select v-model="searchBasis">
+        <option value="section">Section</option>
+        <option value="name">Book Name</option>
+        <option value="author">Author</option>
+      </select>
+      <button @click="search" class="btn btn-primary">Search</button>
+    </div>
     <h1>Welcome {{ username }}!</h1>
     <div style="display: flex; flex-direction: column; align-items: center; padding: 1em;justify-content: center;" class="section-list">
-      <div v-for="section in sections" :key="section.id" class="section" style="width: 100%; margin: 32px 0;">
+      <div v-for="section in filteredSections" :key="section.id" class="section" style="width: 100%; margin: 32px 0;">
         <h3>{{ section.name }}</h3>
         <div class="ebook-list" style="display: flex; flex-wrap: wrap;">
           <div v-if="section.ebooks.length > 0" v-for="ebook in section.ebooks" :key="ebook.id" class="product" style="width: 300px; margin: 16px; padding: 16px; border: 1px solid #ccc; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; flex-direction: column;">
@@ -31,14 +40,39 @@ export default {
     return {
       sections: [],
       pendingRequests: [],
+      searchQuery: '',
+      searchBasis: 'name',
       error: null,
+      isSearchClicked: false, // New data property to track if search button is clicked
     };
   },
   computed: {
     username() {
       return localStorage.getItem("username");
     },
+    filteredSections() {
+      if (this.isSearchClicked) { // Return filtered sections only if search button is clicked
+        const query = this.searchQuery.toLowerCase();
+        const basis = this.searchBasis.toLowerCase();
+        return this.sections.filter(section => {
+          // Filter ebooks within sections based on selected basis
+          section.ebooks = section.ebooks.filter(ebook => {
+            if (basis === 'section') {
+              return section.name.toLowerCase().includes(query);
+            } else if (basis === 'name') {
+              return ebook.name.toLowerCase().includes(query);
+            } else if (basis === 'author') {
+              return ebook.author.toLowerCase().includes(query);
+            }
+          });
+          return section.ebooks.length > 0;
+        });
+      } else {
+        return this.sections; // Return all sections if search button is not clicked
+      }
+    }
   },
+
   created() {
     this.fetchSections();
     this.fetchPendingRequests(); // Fetch user's pending requests
@@ -129,5 +163,12 @@ export default {
       // Redirect to the page where the content of the accessed book should be shown
       this.$router.push({ name: 'ShowAccessedbooks', params: { ebookId: ebook.id } });
     },
+    search() {
+      // Triggered when the search button is clicked
+      // Fetching data will happen only when the user clicks the search button
+      this.isSearchClicked = true; // Set search clicked to true
+      this.fetchSections();
+      this.fetchPendingRequests();
+    }
   },
 };

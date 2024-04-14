@@ -1,7 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash,check_password_hash
 
-
 db=SQLAlchemy()
 
 
@@ -89,6 +88,7 @@ class Access(db.Model):
 
     librarian_id = db.Column(db.Integer, db.ForeignKey('librarian.id'), nullable=False)
     librarian = db.relationship('Librarian', backref=db.backref('access_granted', lazy=True))
+    ebook = db.relationship('Ebook', backref=db.backref('access', cascade='all, delete-orphan', lazy=True))
 
     def __repr__(self):
         return f"Access('{self.user_id}', '{self.section_id}', '{self.granted_access_date}', '{self.revoked_access_date}', '{self.librarian_id}')"
@@ -102,6 +102,7 @@ class BookRequest(db.Model):
     return_date = db.Column(db.DateTime)
 
     user = db.relationship('User', backref=db.backref('book_requests', lazy=True))
+    ebook = db.relationship('Ebook', backref=db.backref('book_requests', cascade='all, delete-orphan', lazy=True))
 
     def __repr__(self):
         return f"BookRequest('{self.ebook_id}', '{self.user_id}', '{self.request_date}', '{self.return_date}')"
@@ -115,7 +116,7 @@ class Feedback(db.Model):
     feedback_date = db.Column(db.DateTime, nullable=False)
 
     user = db.relationship('User', backref=db.backref('feedbacks', lazy=True))
-    ebook = db.relationship('Ebook', backref=db.backref('feedbacks', lazy=True))
+    ebook = db.relationship('Ebook', backref=db.backref('feedbacks', cascade='all, delete-orphan',lazy=True))
 
     def __repr__(self):
         return f"Feedback('{self.rating}', '{self.comment}', '{self.feedback_date}')"

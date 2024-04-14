@@ -571,6 +571,61 @@ def get_book_content(current_user, book_id):
         print("Error:", e)
         return jsonify({"message": "Internal Server Error"}), 500
 
+@app.delete('/api/return-book/<int:book_id>')
+@token_required
+def return_book(current_user, book_id):
+    try:
+        # Check if the current user has access to the book
+        access = Access.query.filter_by(user_id=current_user.id, ebook_id=book_id).first()
+        if not access:
+            return jsonify({"message": "You don't have access to this book."}), 403
+        
+        # Revoke access to the book by setting the revoked_access_date
+        db.session.delete(access)
+        db.session.commit()
+        
+        return jsonify({"message": "Book returned successfully."}), 200
+    except Exception as e:
+        print("Error:", e)
+        return jsonify({"message": "Internal Server Error"}), 500
+
+@app.post('/api/feedback/<int:book_id>')
+@token_required
+def submit_feedback(current_user, book_id):
+    data = request.get_json()
+    rating = data.get('rating')
+    comment = data.get('comment')
+
+    if not rating:
+        return jsonify({"message": "Rating is required"}), 400
+
+    # Check if the user has access to the ebook
+    access = Access.query.filter_by(user_id=current_user.id, ebook_id=book_id).first()
+    if not access:
+        return jsonify({"message": "You don't have access to give feedback for this book."}), 403
+
+    # Check if the ebook exists
+    ebook = Ebook.query.get(book_id)
+    if not ebook:
+        return jsonify({"message": "Ebook not found."}), 404
+    
+    existing_feedback = Feedback.query.filter_by(user_id=current_user.id, ebook_id=book_id).first()
+    if existing_feedback:
+        return jsonify({"message": "You have already submitted feedback for this book."}), 400
+
+    # Create a new feedback entry
+    feedback = Feedback(
+        ebook_id=book_id,
+        user_id=current_user.id,
+        rating=rating,
+        comment=comment,
+        feedback_date=datetime.utcnow()
+    )
+    db.session.add(feedback)
+    db.session.commit()
+
+    return jsonify({"message": "Feedback submitted successfully"}), 201    
+
 @app.get('/say-hello')
 def say_helloo():
     print("GET/say-hello")

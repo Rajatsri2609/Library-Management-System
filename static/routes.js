@@ -12,6 +12,7 @@ import DeleteEbook from './components/DeleteEbook.js'
 import EditEBooks from './components/EditEBooks.js'
 import pendingrequest from './components/pendingrequest.js'
 import ShowAccessedbooks from './components/ShowAccessedbooks.js'
+import feedback from './components/feedback.js'
 const routes = [
     { path: '/', component: Home},
     { path: '/login', component: Login,name:'Login'},
@@ -26,8 +27,8 @@ const routes = [
     { path: '/sections/:sectionId/ebooks/:ebookId/delete', component: DeleteEbook, name: 'DeleteEbook' },
     { path: '/sections/:sectionId/ebooks/:ebookId/edit', component: EditEBooks, name: 'EditEBooks' },
     { path :'/api/pending-requests' , component: pendingrequest, name: 'pendingrequest'},
-    { path:'/api/accessed-books',component:ShowAccessedbooks,name:'ShowAccessedbooks'}
-    
+    { path:'/api/accessed-books',component:ShowAccessedbooks,name:'ShowAccessedbooks'},
+    {path :'/api/feedback/:book_id',component:feedback,name:'feedback'},
   ]
   
   export default new VueRouter({
