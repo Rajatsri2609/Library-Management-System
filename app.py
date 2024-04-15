@@ -24,6 +24,12 @@ def create_app() -> Flask:
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///project_db.sqlite3'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SECURITY_TOKEN_AUTHENTICATION_HEADER'] = 'Authentication-Token'
+    CELERY_BROKER_URL = "redis://localhost:6379/1"
+    CELERY_RESULT_BACKEND= "redis://localhost:6379/2"
+    timezone = "Asia/Kolkata"
+    REDIS_URL="redis://localhost:6379"
+    broker_connection_retry_on_startup=True
+
     CORS(app)
     db.init_app(app)
     app.app_context().push()
@@ -654,7 +660,7 @@ def submit_feedback(current_user, book_id):
 @celery_app.on_after_configure.connect
 def send_email(sender, **kwargs):
     sender.add_periodic_task(
-        crontab(hour=19, minute=00),
+        crontab(hour=12, minute=14,day_of_week=1),
         daily_reminder.s('rajat123@email.com', 'Daily reminder'),
     )
 
