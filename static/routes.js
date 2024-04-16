@@ -1,6 +1,6 @@
 import Home from './components/Home.js'
 import Login from './components/Login.js'
-import Register from './components/register.js'
+import Register from './components/Register.js'
 import Userdashboard from './components/Userdashboard.js'
 import Librariandashboard from './components/Librariandashboard.js'
 import AddSection from './components/AddSection.js'
