@@ -149,7 +149,7 @@ def register():
 
 @app.get('/api/sections')
 @token_required
-@cache.cached(timeout=30)
+# @cache.cached(timeout=30)
 def get_sections(current_user):
     sections = Section.query.all()
     section_data = []
@@ -526,7 +526,27 @@ def grant_access(current_user, request_id):
     except Exception as e:
         print("Error:", e)
         return jsonify({"message": "Internal Server Error"}), 500
-    
+
+@app.post('/api/deny-access/<int:request_id>')
+@token_required
+def deny_access(current_user, request_id):
+    try:
+        if not current_user.is_Librarian:
+            return jsonify({"message": "Unauthorized access"}), 403
+
+        # Find the pending request
+        book_request = BookRequest.query.session.get(BookRequest, request_id)
+        if not book_request:
+            return jsonify({"message": "Request not found"}), 404
+
+        # Delete the pending request
+        db.session.delete(book_request)
+        db.session.commit()
+
+        return jsonify({"message": "Access denied successfully"}), 200
+    except Exception as e:
+        print("Error:", e)
+        return jsonify({"message": "Internal Server Error"}), 500
 
 @app.post('/api/revoke-access/<int:request_id>')
 @token_required
