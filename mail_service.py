@@ -4,7 +4,7 @@ from email.mime.text import MIMEText
 
 SMTP_HOST = "localhost"
 SMTP_PORT = 1025
-SENDER_EMAIL = 'rajat@study.iitm.ac.in'
+SENDER_EMAIL = 'librarian@email.com'
 SENDER_PASSWORD = ''
 
 

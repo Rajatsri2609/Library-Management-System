@@ -21,13 +21,14 @@ def daily_reminder(to, subject):
 
 # monthly report
 
-# @shared_task(ignore_result=True)
-# def report(to, subject):
-#     users = User.query.all()
-#     feedback = Feedback.query.all()
-#     for user in users:
-#         with open('report.html', 'r') as f:
-#             template = Template(f.read())
-#             send_message(user.email, subject,
-#                          template.render(feedback=feedback))
-#     return "OK"
+@shared_task(ignore_result=True)
+def report(to, subject):
+    users = User.query.all()
+    feedback = Feedback.query.all()
+    for user in users:
+        feedback = Feedback.query.filter_by(user_id=user.id).all()
+        with open('report.html', 'r') as f:
+            template = Template(f.read())
+            send_message(user.email, subject,
+                         template.render(feedback=feedback))
+    return "OK"

@@ -10,11 +10,12 @@ from flask import current_app as app, jsonify, request, render_template
 from worker import celery_init_app
 #from tasks import say_hello
 from tasks import daily_reminder
-# from tasks import report
+from tasks import report
 from celery import Celery, Task
 from flask import Flask
 from datetime import datetime, timezone
 from celery.schedules import crontab
+from cache_instances import cache
 from sqlalchemy import func
 
 
@@ -29,8 +30,13 @@ def create_app() -> Flask:
     REDIS_URL="redis://localhost:6379"
     timezone = "Asia/Kolkata"
     broker_connection_retry_on_startup=True
+    app.config['CACHE_TYPE'] = 'RedisCache'
+    app.config['CACHE_REDIS_HOST'] = 'localhost'
+    app.config['CACHE_REDIS_PORT'] = '6379'
+    app.config['CACHE_REDIS_DB'] = '3'
     CORS(app)
     db.init_app(app)
+    cache.init_app(app)
     app.app_context().push()
     db.create_all()
     celery_init_app(app)
@@ -143,6 +149,7 @@ def register():
 
 @app.get('/api/sections')
 @token_required
+@cache.cached(timeout=30)
 def get_sections(current_user):
     sections = Section.query.all()
     section_data = []
@@ -664,12 +671,12 @@ def send_email(sender, **kwargs):
     )
 
 #monthly report
-# @celery_app.on_after_configure.connect
-# def send_email(sender, **kwargs):
-#     sender.add_periodic_task(
-#         crontab(hour=19, minute=00,day_of_month=30),
-#         report.s('rajat123@email.com', 'Monthly Report'),
-#     )    
+@celery_app.on_after_configure.connect
+def send_email(sender, **kwargs):
+    sender.add_periodic_task(
+        crontab(hour=12, minute=1,day_of_month=16),
+        report.s('rajat123@email.com', 'Monthly Report'),
+    )    
 
 if __name__ == "__main__":
     app.run(debug=True)
