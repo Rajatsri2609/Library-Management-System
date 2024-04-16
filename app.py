@@ -10,7 +10,7 @@ from flask import current_app as app, jsonify, request, render_template
 from worker import celery_init_app
 #from tasks import say_hello
 from tasks import daily_reminder
-from tasks import report
+# from tasks import report
 from celery import Celery, Task
 from flask import Flask
 from datetime import datetime, timezone
@@ -24,6 +24,11 @@ def create_app() -> Flask:
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///project_db.sqlite3'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['SECURITY_TOKEN_AUTHENTICATION_HEADER'] = 'Authentication-Token'
+    BROKER_URL = "redis://localhost:6379/1"
+    RESULT_BACKEND = "redis://localhost:6379/2"
+    REDIS_URL="redis://localhost:6379"
+    timezone = "Asia/Kolkata"
+    broker_connection_retry_on_startup=True
     CORS(app)
     db.init_app(app)
     app.app_context().push()
@@ -654,17 +659,17 @@ def submit_feedback(current_user, book_id):
 @celery_app.on_after_configure.connect
 def send_email(sender, **kwargs):
     sender.add_periodic_task(
-        crontab(hour=5, minute=11,day_of_week=2),
+        crontab(hour=11, minute=43),
         daily_reminder.s('rajat123@email.com', 'Daily reminder'),
     )
 
 #monthly report
-@celery_app.on_after_configure.connect
-def send_email(sender, **kwargs):
-    sender.add_periodic_task(
-        crontab(hour=19, minute=00,day_of_month=30),
-        report.s('rajat123@email.com', 'Monthly Report'),
-    )    
+# @celery_app.on_after_configure.connect
+# def send_email(sender, **kwargs):
+#     sender.add_periodic_task(
+#         crontab(hour=19, minute=00,day_of_month=30),
+#         report.s('rajat123@email.com', 'Monthly Report'),
+#     )    
 
 if __name__ == "__main__":
     app.run(debug=True)
