@@ -450,30 +450,30 @@ def get_pending_requests(current_user):
         
         # Check if there are pending requests in the Access table
         access_requests = Access.query.filter_by(revoked_access_date=None).all()
-        if access_requests:
-            for access in access_requests:
-                request_info = {
-                    'id': access.id,
-                    'user_id': access.user_id,
-                    'ebook_id': access.ebook_id,
-                    'request_date': access.granted_access_date.isoformat(),
-                    'accessGranted': True,  # Access is already granted
-                    'accessButtonText': 'Revoke Access'  # Button text for revoking access
-                }
-                pending_requests_info.append(request_info)
-        else:
+    
+        for access in access_requests:
+            request_info = {
+                'id': access.id,
+                'user_id': access.user_id,
+                'ebook_id': access.ebook_id,
+                'request_date': access.granted_access_date.isoformat(),
+                'accessGranted': True,  # Access is already granted
+                'accessButtonText': 'Revoke Access'  # Button text for revoking access
+            }
+            pending_requests_info.append(request_info)
+        
             # If there are no pending requests in Access table, fetch from BookRequest table
-            book_requests = BookRequest.query.filter_by(return_date=None).all()
-            for request in book_requests:
-                request_info = {
-                    'id': request.id,
-                    'user_id': request.user_id,
-                    'ebook_id': request.ebook_id,
-                    'request_date': request.request_date.isoformat(),
-                    'accessGranted': False,  # Access needs to be granted
-                    'accessButtonText': 'Grant Access'  # Button text for granting access
-                }
-                pending_requests_info.append(request_info)
+        book_requests = BookRequest.query.filter_by(return_date=None).all()
+        for request in book_requests:
+            request_info = {
+                'id': request.id,
+                'user_id': request.user_id,
+                'ebook_id': request.ebook_id,
+                'request_date': request.request_date.isoformat(),
+                'accessGranted': False,  # Access needs to be granted
+                'accessButtonText': 'Grant Access'  # Button text for granting access
+            }
+            pending_requests_info.append(request_info)
 
         return jsonify(pending_requests_info), 200
     except Exception as e:
