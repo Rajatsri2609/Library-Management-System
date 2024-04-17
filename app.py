@@ -150,7 +150,7 @@ def register():
 
 @app.get('/api/sections')
 @token_required
-# @cache.cached(timeout=30)
+@cache.cached(timeout=30)
 def get_sections(current_user):
     sections = Section.query.all()
     section_data = []
