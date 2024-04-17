@@ -1,5 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash,check_password_hash
+from datetime import *
 
 db=SQLAlchemy()
 
@@ -94,6 +95,24 @@ class Access(db.Model):
     def __repr__(self):
         return f"Access('{self.user_id}', '{self.section_id}', '{self.granted_access_date}', '{self.revoked_access_date}', '{self.librarian_id}')"
 
+class AccessHistory(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    ebook_id = db.Column(db.Integer, db.ForeignKey('ebook.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    section_id = db.Column(db.Integer, db.ForeignKey('section.id'), nullable=False)
+    access_date = db.Column(db.DateTime, nullable=False)
+    librarian_id = db.Column(db.Integer, db.ForeignKey('librarian.id'), nullable=False)
+    ebook_name = db.Column(db.String(200), nullable=False)
+
+    user = db.relationship('User', backref=db.backref('access_history', lazy=True))
+    ebook = db.relationship('Ebook', backref=db.backref('access_history', lazy=True))
+    section = db.relationship('Section', backref=db.backref('access_history', lazy=True))
+    librarian = db.relationship('Librarian', backref=db.backref('access_history', lazy=True))
+
+    def __repr__(self):
+        return f"AccessHistory('{self.ebook_id}', '{self.user_id}', '{self.access_date}', '{self.librarian_id}', '{self.ebook_name}')"
+
+
 class BookRequest(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     ebook_id = db.Column(db.Integer, db.ForeignKey('ebook.id'), nullable=False)
@@ -121,6 +140,5 @@ class Feedback(db.Model):
 
     def __repr__(self):
         return f"Feedback('{self.rating}', '{self.comment}', '{self.feedback_date}')"
-
 
 

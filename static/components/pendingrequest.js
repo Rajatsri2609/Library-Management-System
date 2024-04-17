@@ -21,7 +21,6 @@ export default {
             <td>
               <template v-if="!request.accessGranted">
                 <button @click="toggleAccess(request, 'grant')" class="btn btn-success">Grant Access</button>
-                <button @click="denyAccess(request)" class="btn btn-danger">Deny Access</button>
               </template>
               <template v-else>
                 <button @click="toggleAccess(request, 'revoke')" class="btn btn-danger">Revoke Access</button>
@@ -84,9 +83,9 @@ export default {
         }
       })
       .then(data => {
-        if (action === 'revoke') {
-          request.accessGranted = !request.accessGranted;
-        } else {
+        if (action === 'grant') {
+          request.accessGranted = true;
+        } else if (action === 'revoke') {
           this.pendingRequests = this.pendingRequests.filter(req => req.id !== request.id);
         }
       })
@@ -95,8 +94,5 @@ export default {
         alert(`Error ${action === 'grant' ? 'revoking' : 'granting'} access`);
       });
     },
-    denyAccess(request) {
-      
-    }
   }
 };

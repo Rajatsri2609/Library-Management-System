@@ -11,6 +11,7 @@ from worker import celery_init_app
 #from tasks import say_hello
 from tasks import daily_reminder
 from tasks import report
+from tasks import revoke_access_task
 from celery import Celery, Task
 from flask import Flask
 from datetime import datetime, timezone
@@ -502,7 +503,7 @@ def grant_access(current_user, request_id):
             return jsonify({"message": "Unauthorized access"}), 403
 
         # Find the pending request
-        book_request = BookRequest.query.session.get(BookRequest, request_id)
+        book_request = BookRequest.query.get(request_id)
         if not book_request:
             return jsonify({"message": "Request not found"}), 404
 
@@ -517,6 +518,17 @@ def grant_access(current_user, request_id):
         )
         db.session.add(access)
 
+        # Create a new entry in the AccessHistory table
+        access_history = AccessHistory(
+            ebook_id=book_request.ebook_id,
+            user_id=book_request.user_id,
+            section_id=book_request.section_id,
+            access_date=datetime.now(timezone.utc),
+            librarian_id=current_user.id,
+            ebook_name=book_request.ebook.name
+        )
+        db.session.add(access_history)
+
         # Delete the pending request
         db.session.delete(book_request)
 
@@ -527,26 +539,26 @@ def grant_access(current_user, request_id):
         print("Error:", e)
         return jsonify({"message": "Internal Server Error"}), 500
 
-@app.post('/api/deny-access/<int:request_id>')
-@token_required
-def deny_access(current_user, request_id):
-    try:
-        if not current_user.is_Librarian:
-            return jsonify({"message": "Unauthorized access"}), 403
+# @app.post('/api/deny-access/<int:request_id>')
+# @token_required
+# def deny_access(current_user, request_id):
+#     try:
+#         if not current_user.is_Librarian:
+#             return jsonify({"message": "Unauthorized access"}), 403
 
-        # Find the pending request
-        book_request = BookRequest.query.session.get(BookRequest, request_id)
-        if not book_request:
-            return jsonify({"message": "Request not found"}), 404
+#         # Find the pending request
+#         book_request = BookRequest.query.session.get(BookRequest, request_id)
+#         if not book_request:
+#             return jsonify({"message": "Request not found"}), 404
 
-        # Delete the pending request
-        db.session.delete(book_request)
-        db.session.commit()
+#         # Delete the pending request
+#         db.session.delete(book_request)
+#         db.session.commit()
 
-        return jsonify({"message": "Access denied successfully"}), 200
-    except Exception as e:
-        print("Error:", e)
-        return jsonify({"message": "Internal Server Error"}), 500
+#         return jsonify({"message": "Access denied successfully"}), 200
+#     except Exception as e:
+#         print("Error:", e)
+#         return jsonify({"message": "Internal Server Error"}), 500
 
 @app.post('/api/revoke-access/<int:request_id>')
 @token_required
@@ -672,31 +684,24 @@ def submit_feedback(current_user, book_id):
 
     return jsonify({"message": "Feedback submitted successfully"}), 201    
 
-#@app.get('/say-hello')
-#def say_helloo():
-#    print("GET/say-hello")
-#    # Enqueue the Celery task instead of calling it directly
-#    task = say_hello.delay()
-#    print(task.id)
-#    return jsonify({"task-id": task.id})
-
-
-#daily mails
 
 @celery_app.on_after_configure.connect
-def send_email(sender, **kwargs):
+def send_emails(sender, **kwargs):
+    #daily reminder
     sender.add_periodic_task(
-        crontab(hour=11, minute=43),
+        crontab(hour=14, minute=39),
         daily_reminder.s('rajat123@email.com', 'Daily reminder'),
     )
-
-#monthly report
-@celery_app.on_after_configure.connect
-def send_email(sender, **kwargs):
+    #send monthly report
     sender.add_periodic_task(
-        crontab(hour=12, minute=1,day_of_month=16),
+        crontab(hour=14, minute=39, day_of_month=17),
         report.s('rajat123@email.com', 'Monthly Report'),
-    )    
+    )
+    #revoke access
+    sender.add_periodic_task(
+        crontab(hour=14, minute=39),
+        revoke_access_task.s(),
+    )
 
 if __name__ == "__main__":
     app.run(debug=True)

@@ -77,7 +77,7 @@ export default {
             // Redirect the user to the home page or any other desired page
             this.$router.push({ path: '/login' });
           } else {
-            const errorData = await res.json();
+            errorData = await res.json();
             this.error = errorData.message;
           }
         },

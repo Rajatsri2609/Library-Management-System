@@ -13,8 +13,6 @@ export default {
               <th>Name</th>
               <th>Content</th>
               <th>Author</th>
-              <th>Date Issued</th>
-              <th>Return Date</th>
               <th>Actions</th> 
             </tr>
           </thead>
@@ -23,8 +21,6 @@ export default {
               <td>{{ ebook.name }}</td>
               <td>{{ ebook.content }}</td>
               <td>{{ ebook.author }}</td>
-              <td>{{ formatDate(ebook.dateIssued) }}</td>
-              <td>{{ formatDate(ebook.returnDate) }}</td>
               <td>
                 <button @click="confirmDelete(ebook.id, ebook.name)" class="btn btn-danger">
                     Delete

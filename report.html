@@ -4,10 +4,12 @@
   <meta charset="UTF-8" />
   <meta http-equiv="X-UA-Compatible" content="IE=edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Feedback Report</title>
+  <title>Feedback and Access History Report</title>
 </head>
 <body>
   <h1>Monthly Report</h1>
+  
+  <h2>Feedback History:</h2>
   <ul>
     {% for item in feedback %}
       <li>User ID: {{ item.user_id }}</li>
@@ -15,6 +17,19 @@
       <li>Rating: {{ item.rating }}</li>
       <li>Comment: {{ item.comment }}</li>
       <li>Feedback Date: {{ item.feedback_date }}</li>
+      <hr />
+    {% endfor %}
+  </ul>
+  
+  <h2>Access History:</h2>
+  <ul>
+    {% for item in access_history %}
+      <li>User ID: {{ item.user_id }}</li>
+      <li>Ebook ID: {{ item.ebook_id }}</li>
+      <li>Section ID: {{ item.section_id }}</li>
+      <li>Access Date: {{ item.access_date }}</li>
+      <li>Librarian ID: {{ item.librarian_id }}</li>
+      <li>Ebook Name: {{ item.ebook_name }}</li>
       <hr />
     {% endfor %}
   </ul>
